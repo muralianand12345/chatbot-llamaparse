@@ -1,8 +1,10 @@
 import os
+import json
 import nest_asyncio
 from fastapi import FastAPI, HTTPException
 from dotenv import dotenv_values
 from llama_index.core import VectorStoreIndex
+from starlette.responses import Response
 
 from functions.store_vector import init_faiss, load_documents, read_data_folder
 from functions.query_search import load_index
@@ -63,8 +65,23 @@ def store_db():
 @app.post("/query")
 def query_search(query: str):
     try:
+        template = """
+            You are a chatbot that helps users to find information and predict from a database of documents.
+            The user asks a question and you provide the answer.
+            If the question is not found in the database, you should reply 'Kindly request questions related to the subject'.
+            User asks: "{}"
+            Do not answer if the question is not safe for work.
+            Reply with the answer in the format of json with the response, reference docs and image link if available else ignore image link.
+        """
+
+        template = template.format(query)
+
         query_engine = index.as_query_engine()
-        response = query_engine.query(query)
-        return response
+        bot_response = query_engine.query(template)
+
+        response_json = json.loads(bot_response.response)
+
+        return Response(content=json.dumps(response_json), media_type="application/json")
+    
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
