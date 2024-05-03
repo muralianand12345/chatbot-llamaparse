@@ -1,0 +1,11 @@
+nest-asyncio
+numpy
+torch
+transformers
+fastapi
+uvicorn
+python-dotenv
+llama-index
+llama-parse
+llama-index-vector-stores-faiss
+faiss-cpu
